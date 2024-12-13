@@ -1,42 +1,40 @@
-from flask import Flask, render_template, request, jsonify
-import socket
+import os
 import random
+from flask import Flask, render_template, Response, request
+import cv2
+import threading
 
 app = Flask(__name__)
 
-# Fonction pour obtenir l'IP locale
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
+# Choisir un port aléatoire
+port = random.randint(1024, 65535)
 
-# La page d'accueil avec les images
-@app.route("/")
+# Variables pour le flux vidéo
+camera_url = "http://<IP>/video_feed"  # Remplacez par l'URL de votre caméra
+video_capture = cv2.VideoCapture(camera_url)
+
+@app.route('/')
 def home():
-    return render_template("home.html")
+    return render_template("home.html", port=port)
 
-# Générer un lien de streaming lorsqu'un utilisateur clique sur une image
-@app.route("/get_stream_link/<phone_id>", methods=["POST"])
-def get_stream_link(phone_id):
-    # Sélectionner un port aléatoire
-    port = random.randint(1024, 65535)
+@app.route('/start_stream')
+def start_stream():
+    return render_template("camera.html")
 
-    # Créer l'URL de streaming (remplacer par votre logique de streaming réelle)
-    client_ip = get_local_ip()
-    stream_url = f"http://{client_ip}:{port}/stream_{phone_id}"
+def gen_frames():
+    while True:
+        success, frame = video_capture.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
-    # Retourner le lien
-    return jsonify({"stream_url": stream_url})
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    # Exécuter le serveur Flask avec un port aléatoire
-    port = random.randint(1024, 65535)
-    local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution sur : http://{local_ip}:{port}")
     app.run(host="0.0.0.0", port=port)
