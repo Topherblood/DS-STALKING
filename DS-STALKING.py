@@ -5,6 +5,7 @@ import subprocess
 import threading
 import time
 import os
+import random
 import webbrowser
 
 # Créer une interface ASCII art avec pyfiglet
@@ -42,10 +43,14 @@ def get_local_ip():
         s.close()
     return ip
 
+# Générer un port aléatoire
+def get_random_port():
+    return random.randint(10000, 65535)
+
 # Générer une URL ngrok ou un lien localhost
 def get_ngrok_url():
     # Cette fonction sera utilisée pour démarrer ngrok via subprocess (optionnel)
-    ngrok_process = subprocess.Popen(["./ngrok", "http", "5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ngrok_process = subprocess.Popen(["./ngrok", "http", str(get_random_port())], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(5)  # Attendre que ngrok démarre
     ngrok_url = ""
     with ngrok_process.stdout:
@@ -64,7 +69,7 @@ def home():
 def stream_link():
     # Génère un lien contenant l'adresse IP et le port
     local_ip = get_local_ip()
-    port = 5000  # Remplacez si nécessaire
+    port = get_random_port()  # Port aléatoire à chaque exécution
     stream_url = f"http://{local_ip}:{port}/view_stream"
     return jsonify({"stream_url": stream_url})
 
@@ -76,7 +81,7 @@ def view_stream():
 def start_ffmpeg():
     # Utiliser ffmpeg pour afficher les informations du flux vidéo en temps réel dans le terminal
     local_ip = get_local_ip()
-    port = 5000  # Remplacez avec votre port
+    port = get_random_port()  # Utiliser le même port aléatoire pour ffmpeg
     url = f"http://{local_ip}:{port}/view_stream"
     
     # Lancer ffmpeg pour obtenir des informations en temps réel sur le flux
@@ -86,15 +91,17 @@ def start_ffmpeg():
 def open_browser():
     # Ouvrir un navigateur pour visualiser le flux vidéo et audio
     local_ip = get_local_ip()
-    url = f"http://{local_ip}:5000/view_stream"
+    port = get_random_port()  # Utiliser un port unique pour le navigateur
+    url = f"http://{local_ip}:{port}/view_stream"
     
     # Utiliser le module webbrowser pour ouvrir le lien dans un navigateur
     webbrowser.open(url)
 
 if __name__ == "__main__":
-    # Exécuter le serveur Flask
+    # Exécuter le serveur Flask avec un port aléatoire
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:5000")
+    port = get_random_port()
+    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
 
     # Lancer ffmpeg dans un thread pour capturer les informations en temps réel
     threading.Thread(target=start_ffmpeg, daemon=True).start()
@@ -102,4 +109,4 @@ if __name__ == "__main__":
     # Ouvrir automatiquement le navigateur pour le flux vidéo
     open_browser()
 
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=port)  # Lancer le serveur Flask sur le port généré
