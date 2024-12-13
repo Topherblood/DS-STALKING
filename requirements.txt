@@ -1,1 +1,2 @@
 Flask==2.3.3
+pyfiglet==0.8.post1
