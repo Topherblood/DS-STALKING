@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Stream</title>
+</head>
+<body>
+    <h1>Live Stream</h1>
+    <video id="streamVideo" autoplay playsinline></video>
+    <br>
+    <p>Current Camera Mode: {{ camera_mode }}</p>
+    <script>
+        var video = document.getElementById("streamVideo");
+        // Le flux vidéo pourrait venir d'une source RTSP ou WebRTC ici
+        // Exemple d'URL de flux à remplacer par celle générée par Flask
+        var streamURL = "http://localhost:5000/your-stream-url"; 
+        video.src = streamURL;
+    </script>
+</body>
+</html>
