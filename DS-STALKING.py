@@ -70,7 +70,6 @@ def view_stream():
 @app.route("/change_camera", methods=["POST"])
 def change_camera():
     # Logique pour changer la caméra
-    # On peut utiliser une variable globale ou une méthode qui gère l'index de la caméra
     camera = request.json.get('camera')  # caméra avant ou arrière
     print(f"Changement de caméra : {camera}")
 
