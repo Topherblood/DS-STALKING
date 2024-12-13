@@ -42,12 +42,12 @@ def home():
     # Cette fonction rend le fichier camera.html lorsqu'on visite la page d'accueil
     return render_template("camera.html")
 
-@app.route("/stream_link", methods=["POST"])
+@app.route("/stream_link", methods=["GET"])
 def stream_link():
-    # Génère un lien contenant l'adresse IP et le port
+    # Génère un lien contenant l'adresse IP et le port pour accéder au flux vidéo
     client_ip = request.remote_addr
-    port = 5000  # Remplacez si nécessaire
-    stream_url = f"http://{client_ip}:{port}/stream"
+    port = 4444  # Port du serveur Flask (modifiez-le si nécessaire)
+    stream_url = f"http://{client_ip}:{port}/video_stream"  # URL du flux vidéo
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
