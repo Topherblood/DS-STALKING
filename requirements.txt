@@ -1,2 +1,2 @@
-echo "user-agents" > requirements.txt
-echo "pyfiglet" >> requirements.txt
+
+Flask==2.3.3
