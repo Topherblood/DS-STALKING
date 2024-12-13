@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autorisation caméra et micro</title>
+</head>
+<body>
+    <h1>Demande d'autorisation</h1>
+    <p>Veuillez autoriser l'accès à votre caméra et à votre micro pour pouvoir continuer.</p>
+    <button onclick="requestPermission()">Autoriser</button>
+
+    <script>
+        function requestPermission() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function(stream) {
+                fetch("/stream_link", { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = data.stream_url;
+                });
+            })
+            .catch(function(err) {
+                console.log("Permission refusée: " + err);
+            });
+        }
+    </script>
+</body>
+</html>
