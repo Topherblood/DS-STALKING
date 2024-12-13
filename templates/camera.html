@@ -4,42 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera Access</title>
-    <script>
-        function startStream() {
-            // Demande d'accès à la caméra et au micro
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(function(stream) {
-                    // Afficher le flux vidéo dans un élément video
-                    var video = document.getElementById("videoElement");
-                    video.srcObject = stream;
-                })
-                .catch(function(err) {
-                    alert("Erreur d'accès à la caméra et au micro: " + err);
-                });
-        }
-
-        function changeCamera(mode) {
-            fetch('/change_camera', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ mode: mode })
-            }).then(response => response.json())
-            .then(data => {
-                alert('Camera mode changed to: ' + data.current_mode);
-            });
-        }
-
-        // Initialiser le flux
-        window.onload = startStream;
-    </script>
 </head>
 <body>
-    <h1>Camera Access</h1>
-    <video id="videoElement" autoplay playsinline></video>
-    <br>
-    <button onclick="changeCamera('front')">Switch to Front Camera</button>
-    <button onclick="changeCamera('rear')">Switch to Rear Camera</button>
+    <h1>Demande d'accès à la caméra et au micro</h1>
+    <p>Pour commencer à partager votre caméra, cliquez sur le bouton ci-dessous.</p>
+    <button onclick="startStream()">Démarrer le flux vidéo</button>
+
+    <script>
+        async function startStream() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const videoElement = document.createElement('video');
+                videoElement.srcObject = stream;
+                videoElement.play();
+                document.body.appendChild(videoElement);
+
+                // Envoyer le flux à l'URL du serveur
+                const response = await fetch('/start_stream', {
+                    method: 'POST',
+                    body: stream,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                console.log(data);
+            } catch (err) {
+                console.error('Erreur lors de l\'accès à la caméra :', err);
+            }
+        }
+    </script>
 </body>
 </html>
