@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import socket
 import pyfiglet
-import random  # Importer le module random
+import random
+import ssl
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -47,16 +48,15 @@ def home():
 def stream_link():
     # Génère un lien contenant l'adresse IP et le port
     client_ip = request.remote_addr
+    port = random.randint(1000, 65535)  # Port dynamique
     stream_url = f"http://{client_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
-    # Générer un port aléatoire entre 1000 et 65535
-    port = random.randint(1000, 65535)
-    
-    # Afficher le port et l'IP locale
+    # Exécuter le serveur Flask avec SSL et port dynamique
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
-    
-    # Démarrer le serveur Flask avec le port aléatoire
-    app.run(host="0.0.0.0", port=port)
+    port = random.randint(1000, 65535)
+    print(f"Serveur en cours d'exécution : https://{local_ip}:{port}")
+
+    # Configurer SSL pour HTTPS
+    app.run(host="0.0.0.0", port=port, ssl_context=('server.crt', 'server.key'))  # Remplacez par vos fichiers .crt et .key
