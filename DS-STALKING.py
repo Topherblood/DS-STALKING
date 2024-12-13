@@ -1,13 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, Response, jsonify
 import socket
 import pyfiglet
-import subprocess
-import threading
-import time
+import cv2
 import random
-import os
+import threading
 import webbrowser
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -49,6 +47,31 @@ def get_local_ip():
 def get_random_port():
     return random.randint(10000, 65535)
 
+# Flux vidéo en direct
+def generate_video_stream():
+    # Initialiser OpenCV pour capturer depuis la caméra (utiliser 0 pour la caméra par défaut)
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # Encoder l'image en JPEG
+        _, jpeg = cv2.imencode('.jpg', frame)
+        # Convertir l'image en bytes
+        frame_bytes = jpeg.tobytes()
+        
+        # Yield the image as a part of the multipart response
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
+
+    cap.release()
+
+@app.route('/video_feed')
+def video_feed():
+    # Générer un flux vidéo avec OpenCV
+    return Response(generate_video_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route("/")
 def home():
     # Page qui demande l'accès à la caméra et au micro
@@ -59,45 +82,14 @@ def stream_link():
     # Génère un lien contenant l'adresse IP et le port
     local_ip = get_local_ip()
     port = get_random_port()  # Port aléatoire à chaque exécution
-    stream_url = f"http://{local_ip}:{port}/view_stream"
+    stream_url = f"http://{local_ip}:{port}/video_feed"
     return jsonify({"stream_url": stream_url})
 
-# Flux vidéo
-@app.route("/view_stream")
-def view_stream():
-    return render_template("view_stream.html")
-
-@app.route("/change_camera", methods=["POST"])
-def change_camera():
-    # Logique pour changer la caméra
-    camera = request.json.get('camera')  # caméra avant ou arrière
-    print(f"Changement de caméra : {camera}")
-
-    # Logique pour changer de caméra (ici vous devriez ajuster selon votre configuration)
-    # Cela pourrait être un changement dans le code qui démarre la capture vidéo
-    # Exemple :
-    # if camera == "front":
-    #     start_front_camera()
-    # elif camera == "back":
-    #     start_back_camera()
-
-    return jsonify({"status": "success", "message": "Camera switched"})
-
-def start_ffmpeg():
-    # Utiliser ffmpeg pour afficher les informations du flux vidéo en temps réel dans le terminal
-    local_ip = get_local_ip()
-    port = get_random_port()  # Utiliser le même port aléatoire pour ffmpeg
-    url = f"http://{local_ip}:{port}/view_stream"
-    
-    # Lancer ffmpeg pour obtenir des informations en temps réel sur le flux
-    ffmpeg_command = ["ffmpeg", "-i", url, "-f", "null", "-"]
-    subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
 def open_browser():
-    # Ouvrir un navigateur pour visualiser le flux vidéo et audio
+    # Ouvrir un navigateur pour visualiser le flux vidéo
     local_ip = get_local_ip()
     port = get_random_port()  # Utiliser un port unique pour le navigateur
-    url = f"http://{local_ip}:{port}/view_stream"
+    url = f"http://{local_ip}:{port}/video_feed"
     
     # Utiliser le module webbrowser pour ouvrir le lien dans un navigateur
     webbrowser.open(url)
@@ -107,9 +99,6 @@ if __name__ == "__main__":
     local_ip = get_local_ip()
     port = get_random_port()
     print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
-
-    # Lancer ffmpeg dans un thread pour capturer les informations en temps réel
-    threading.Thread(target=start_ffmpeg, daemon=True).start()
 
     # Ouvrir automatiquement le navigateur pour le flux vidéo
     open_browser()
