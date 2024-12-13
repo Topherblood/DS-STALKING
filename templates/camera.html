@@ -1,44 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page d'accueil</title>
+    <title>Caméra en direct</title>
     <style>
-        /* Appliquer un fond noir à la page entière */
         body {
             background-color: black;
-            color: white; /* Texte en blanc pour contraster avec le fond noir */
-            font-family: Arial, sans-serif;
-            text-align: center; /* Centrer le texte */
-            padding: 20px;
+            color: white;
+            text-align: center;
         }
         h1 {
-            font-size: 2em;
+            font-size: 50px;
         }
-        p {
-            font-size: 1.2em;
+        img {
+            width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
-    <h1>Bienvenue sur DS-STALKING!</h1>
-    <p>Cliquez sur le lien ci-dessous pour commencer à voir le flux de la caméra.</p>
-
-    <a href="/get_stream_link" style="color: #4CAF50; font-size: 1.5em; text-decoration: none;">Obtenez le lien du flux</a>
-
-    <script>
-        // Cette fonction peut être ajoutée pour gérer le lien de streaming si nécessaire.
-        function getStreamLink() {
-            fetch("/get_stream_link", {
-                method: "POST"
-            })
-            .then(response => response.json())
-            .then(data => {
-                window.location.href = data.stream_url;  // Rediriger vers l'URL du stream
-            })
-            .catch(error => console.error("Erreur:", error));
-        }
-    </script>
+    <h1>Caméra en direct</h1>
+    <img src="{{ url_for('video_feed') }}" alt="Caméra en direct">
 </body>
 </html>
