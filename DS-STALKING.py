@@ -46,12 +46,12 @@ def home():
 def stream_link():
     # Génère un lien contenant l'adresse IP et le port
     client_ip = request.remote_addr
-    port = 5000  # Remplacez si nécessaire
+    port = 4444  # Changer le port ici si nécessaire (ou utiliser 8080)
     stream_url = f"http://{client_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
     # Exécuter le serveur Flask
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:5000")
-    app.run(host="0.0.0.0", port=5000)
+    print(f"Serveur en cours d'exécution : http://{local_ip}:4444")  # Port 4444 ou 8080
+    app.run(host="0.0.0.0", port=4444)  # Changer ici également si vous préférez le port 8080
