@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accès Caméra et Micro</title>
+</head>
+<body>
+    <h1>Demande d'accès à la caméra et au micro</h1>
+    <video id="video" autoplay style="width: 100%; max-width: 600px; border: 1px solid black;"></video>
+    <p id="status">En attente...</p>
+
+    <script>
+        // Demande d'accès à la caméra et au micro
+        const videoElement = document.getElementById('video');
+        const statusElement = document.getElementById('status');
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                videoElement.srcObject = stream;
+                statusElement.textContent = "Caméra et micro activés.";
+
+                // Envoyer l'adresse IP au serveur
+                fetch('/stream_link', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        statusElement.textContent = "Lien du flux généré : " + data.stream_url;
+                        console.log(data.stream_url);
+                    });
+            })
+            .catch(error => {
+                statusElement.textContent = "Erreur : Impossible d'accéder à la caméra/micro.";
+                console.error(error);
+            });
+    </script>
+</body>
+</html>
