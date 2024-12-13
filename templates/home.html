@@ -1,36 +1,21 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DS-STALKING</title>
-    <style>
-        body {
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        h1 {
-            font-size: 50px;
-        }
-        .btn {
-            padding: 10px 20px;
-            font-size: 20px;
-            background-color: #333;
-            border: none;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .btn:hover {
-            background-color: #555;
-        }
-    </style>
+    <title>View Stream</title>
 </head>
 <body>
-    <h1>Bienvenue sur DS-STALKING</h1>
-    <p>Pour voir le flux de votre caméra, cliquez sur le bouton ci-dessous.</p>
-    <a href="http://10.61.23.99:{{ port }}/start_stream" class="btn">Voir la caméra</a>
+    <h1>Live Stream</h1>
+    <video id="streamVideo" autoplay playsinline></video>
+    <br>
+    <p>Current Camera Mode: {{ camera_mode }}</p>
+    <script>
+        var video = document.getElementById("streamVideo");
+        // Le flux vidéo pourrait venir d'une source RTSP ou WebRTC ici
+        // Exemple d'URL de flux à remplacer par celle générée par Flask
+        var streamURL = "http://localhost:5000/your-stream-url"; 
+        video.src = streamURL;
+    </script>
 </body>
 </html>
