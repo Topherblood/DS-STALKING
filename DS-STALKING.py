@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import socket
 import pyfiglet
-import os
+import random  # Importer le module random pour choisir un port aléatoire
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -26,40 +26,34 @@ display_interface()
 # Initialiser l'application Flask
 app = Flask(__name__)
 
-# Obtenir l'adresse IP locale de l'ordinateur
+# Obtenir l'adresse IP locale
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s.connect(("8.8.8.8", 80))  # Connexion à un serveur Google pour obtenir l'IP
+        s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
     except Exception:
-        ip = "127.0.0.1"  # Si l'IP ne peut pas être obtenue, utiliser localhost
+        ip = "127.0.0.1"
     finally:
         s.close()
     return ip
 
-# Route principale qui rend la page HTML de la caméra
 @app.route("/")
 def home():
+    # Cette fonction rend le fichier camera.html lorsqu'on visite la page d'accueil
     return render_template("camera.html")
 
-# Route pour générer le lien de streaming
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
+    # Génère un lien contenant l'adresse IP et le port
     client_ip = request.remote_addr
-    port = os.environ.get("FLASK_PORT", 5000)  # Utilisation de la variable d'environnement ou de 5000 par défaut
+    port = random.randint(10000, 65000)  # Choisir un port aléatoire entre 10000 et 65000
     stream_url = f"http://{client_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
-    # Obtenir l'IP locale de l'ordinateur
+    # Exécuter le serveur Flask
     local_ip = get_local_ip()
-    
-    # Choisir un port aléatoire pour chaque exécution du serveur (optionnel)
-    port = 5000  # Vous pouvez choisir un autre port ou laisser la valeur par défaut
-    
-    # Afficher les informations sur l'adresse IP locale
-    print(f"Serveur en cours d'exécution sur : http://{local_ip}:{port}")
-    
-    # Démarrer l'application Flask, accessible depuis tous les appareils du réseau local
-    app.run(host="0.0.0.0", port=port, debug=False)  # 0.0.0.0 pour permettre l'accès réseau
+    port = random.randint(10000, 65000)  # Choisir un port aléatoire entre 10000 et 65000
+    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
+    app.run(host="0.0.0.0", port=port)  # Démarrer le serveur sur un port aléatoire
