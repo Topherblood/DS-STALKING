@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import socket
 import pyfiglet
 import random
-import ssl
+import os
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -39,6 +39,10 @@ def get_local_ip():
         s.close()
     return ip
 
+# Fonction pour générer un port aléatoire entre 1000 et 9999
+def generate_random_port():
+    return random.randint(1000, 9999)
+
 @app.route("/")
 def home():
     # Cette fonction rend le fichier camera.html lorsqu'on visite la page d'accueil
@@ -48,15 +52,17 @@ def home():
 def stream_link():
     # Génère un lien contenant l'adresse IP et le port
     client_ip = request.remote_addr
-    port = random.randint(1000, 65535)  # Port dynamique
+    port = generate_random_port()  # Remplacez par votre propre logique de port si nécessaire
     stream_url = f"http://{client_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
-    # Exécuter le serveur Flask avec SSL et port dynamique
+    # Générer un port aléatoire pour éviter le conflit
+    port = generate_random_port()
+    
+    # Exécuter le serveur Flask avec SSL
     local_ip = get_local_ip()
-    port = random.randint(1000, 65535)
     print(f"Serveur en cours d'exécution : https://{local_ip}:{port}")
-
-    # Configurer SSL pour HTTPS
-    app.run(host="0.0.0.0", port=port, ssl_context=('server.crt', 'server.key'))  # Remplacez par vos fichiers .crt et .key
+    
+    # Exécuter avec SSL (assurez-vous d'avoir les fichiers .crt et .key dans le même répertoire que ce script)
+    app.run(host="0.0.0.0", port=port, ssl_context=('server.crt', 'server.key'))  # Assurez-vous que ces fichiers existent
