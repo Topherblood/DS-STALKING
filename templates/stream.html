@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stream</title>
+</head>
+<body>
+    <h1>Live Stream</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <script>
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.log("An error occurred: " + err);
+            });
+    </script>
+</body>
+</html>
