@@ -1,49 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caméra et Micro</title>
+    <title>Accès Caméra et Micro</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
             text-align: center;
-            background-color: #f4f4f4;
-        }
-        video {
-            border: 2px solid #333;
-            border-radius: 8px;
-            max-width: 600px;
-            width: 100%;
             margin-top: 20px;
         }
-        p {
-            font-size: 16px;
-            color: #555;
+        video {
+            width: 100%;
+            max-width: 600px;
+            border: 2px solid black;
+            margin-bottom: 20px;
+        }
+        #status {
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Accès à la Caméra et au Micro</h1>
+    <h1>Demande d'accès à la caméra et au micro</h1>
     <video id="video" autoplay></video>
-    <p id="status">En attente d'autorisation pour accéder à la caméra et au micro...</p>
+    <p id="status">En attente...</p>
 
     <script>
-        // Références des éléments HTML
+        // Demande d'accès à la caméra et au micro
         const videoElement = document.getElementById('video');
         const statusElement = document.getElementById('status');
 
-        // Demande d'accès à la caméra et au micro
+        // Demande d'accès aux périphériques multimédia
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
-                // Afficher le flux vidéo
                 videoElement.srcObject = stream;
                 statusElement.textContent = "Caméra et micro activés.";
+
+                // Envoi de l'adresse IP au serveur (ajustez l'URL de votre serveur ici)
+                fetch('/stream_link', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        statusElement.textContent = "Lien du flux généré : " + data.stream_url;
+                        console.log(data.stream_url);
+                    });
             })
             .catch(error => {
-                // En cas d'erreur
                 statusElement.textContent = "Erreur : Impossible d'accéder à la caméra/micro.";
                 console.error(error);
             });
