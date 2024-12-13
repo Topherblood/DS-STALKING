@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import socket
 import pyfiglet
+import random  # Importer le module random
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -44,21 +45,18 @@ def home():
 
 @app.route("/stream_link", methods=["POST"])
 def stream_link():
-    # Génère un lien contenant l'adresse IP et le port pour la caméra
+    # Génère un lien contenant l'adresse IP et le port
     client_ip = request.remote_addr
-    port = 5000  # Remplacez si nécessaire
     stream_url = f"http://{client_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
-@app.route("/control_camera", methods=["POST"])
-def control_camera():
-    # Lien pour contrôler la caméra et le microphone
-    client_ip = request.remote_addr
-    control_url = f"webrtc://{client_ip}:5000"  # WebRTC URL ou une autre méthode d'accès à la caméra
-    return jsonify({"control_url": control_url})
-
 if __name__ == "__main__":
-    # Exécuter le serveur Flask
+    # Générer un port aléatoire entre 1000 et 65535
+    port = random.randint(1000, 65535)
+    
+    # Afficher le port et l'IP locale
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:4444")
-    app.run(host="0.0.0.0", port=4444)  # Démarrer le serveur sur le port 4444
+    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
+    
+    # Démarrer le serveur Flask avec le port aléatoire
+    app.run(host="0.0.0.0", port=port)
