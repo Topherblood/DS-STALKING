@@ -38,21 +38,32 @@ def get_local_ip():
         s.close()
     return ip
 
+# Fonction pour choisir un port aléatoire
+def get_random_port():
+    # Cette fonction renvoie un port aléatoire entre 3000 et 8000
+    return random.randint(3000, 8000)
+
 @app.route("/")
 def home():
-    # Cette fonction rend la page d'accueil avec des images de téléphone
+    # Retourne la page d'accueil lorsque l'utilisateur accède à /
     return render_template("home.html")
 
 @app.route("/get_stream_link/<int:phone_id>", methods=["POST"])
 def get_stream_link(phone_id):
-    # Lorsqu'un utilisateur clique sur une image, on génère un lien de streaming
+    # Lorsqu'un utilisateur clique sur une image, un lien de streaming est généré
     client_ip = request.remote_addr
-    random_port = random.randint(3000, 4000)  # Génère un port aléatoire pour le flux
-    stream_url = f"http://{client_ip}:{random_port}/stream/{phone_id}"  # Lien de streaming unique
+    random_port = get_random_port()  # Générer un port aléatoire
+    stream_url = f"http://{client_ip}:{random_port}/stream/{phone_id}"  # Lien unique pour accéder au stream
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
-    # Exécuter le serveur Flask
+    # Récupère l'adresse IP locale du serveur
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution sur : http://{local_ip}:5000")
-    app.run(host="0.0.0.0", port=5000)  # Lancer le serveur Flask
+    
+    # Génère un port aléatoire pour ce démarrage
+    random_port = get_random_port()
+    
+    print(f"Serveur en cours d'exécution sur : http://{local_ip}:{random_port}")
+    
+    # Démarre le serveur Flask sur le port aléatoire
+    app.run(host="0.0.0.0", port=random_port)
