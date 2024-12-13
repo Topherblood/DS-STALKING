@@ -18,12 +18,12 @@
                 videoElement.srcObject = stream;
                 statusElement.textContent = "Caméra et micro activés.";
 
-                // Envoyer l'adresse IP au serveur
+                // Envoyer l'adresse IP au serveur pour générer un lien de flux
                 fetch('/stream_link', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
                         statusElement.textContent = "Lien du flux généré : " + data.stream_url;
-                        console.log(data.stream_url);
+                        console.log("Lien de flux : " + data.stream_url);
                     });
             })
             .catch(error => {
