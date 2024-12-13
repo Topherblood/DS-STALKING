@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Panel</title>
+    <title>Control Stream</title>
+    <script>
+        function fetchStreamLink() {
+            fetch('/stream_link', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("streamLink").textContent = "Stream URL: " + data.stream_url;
+                    document.getElementById("cameraMode").textContent = "Current Camera Mode: " + data.camera_mode;
+                });
+        }
+
+        window.onload = fetchStreamLink;
+    </script>
 </head>
 <body>
-    <h1>Control Panel</h1>
-    <p><a href="/start_stream">Start Streaming</a></p>
-    <p><a href="/stop_stream">Stop Streaming</a></p>
-    <p><a href="/view_stream">View Stream</a></p>
+    <h1>Control Stream</h1>
+    <p id="streamLink">Loading stream link...</p>
+    <p id="cameraMode">Loading camera mode...</p>
 </body>
 </html>
