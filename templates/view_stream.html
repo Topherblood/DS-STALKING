@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Stream</title>
+    <title>Surveillance du flux</title>
 </head>
 <body>
-    <h1>Live Stream</h1>
-    <video id="streamVideo" autoplay playsinline></video>
-    <br>
-    <p>Current Camera Mode: {{ camera_mode }}</p>
+    <h1>Surveillance du flux vidéo</h1>
+    <video id="video" width="640" height="480" controls autoplay></video>
+
     <script>
-        var video = document.getElementById("streamVideo");
-        // Le flux vidéo pourrait venir d'une source RTSP ou WebRTC ici
-        // Exemple d'URL de flux à remplacer par celle générée par Flask
-        var streamURL = "http://localhost:5000/your-stream-url"; 
-        video.src = streamURL;
+        const videoElement = document.getElementById('video');
+        const streamUrl = "http://{{ stream_url }}/camera"; // Utiliser le lien généré par Flask pour le flux vidéo
+
+        fetch(streamUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const objectUrl = URL.createObjectURL(blob);
+                videoElement.src = objectUrl;
+            })
+            .catch(err => console.error('Erreur de flux vidéo :', err));
     </script>
 </body>
 </html>
