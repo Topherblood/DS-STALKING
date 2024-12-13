@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import socket
+import random
 import pyfiglet
-import random  # Importer le module random pour choisir un port aléatoire
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -26,7 +26,7 @@ display_interface()
 # Initialiser l'application Flask
 app = Flask(__name__)
 
-# Obtenir l'adresse IP locale
+# Fonction pour obtenir une IP locale
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -40,20 +40,19 @@ def get_local_ip():
 
 @app.route("/")
 def home():
-    # Cette fonction rend le fichier camera.html lorsqu'on visite la page d'accueil
-    return render_template("camera.html")
+    # Cette fonction rend la page d'accueil avec des images de téléphone
+    return render_template("home.html")
 
-@app.route("/stream_link", methods=["POST"])
-def stream_link():
-    # Génère un lien contenant l'adresse IP et le port
+@app.route("/get_stream_link/<int:phone_id>", methods=["POST"])
+def get_stream_link(phone_id):
+    # Lorsqu'un utilisateur clique sur une image, on génère un lien de streaming
     client_ip = request.remote_addr
-    port = random.randint(10000, 65000)  # Choisir un port aléatoire entre 10000 et 65000
-    stream_url = f"http://{client_ip}:{port}/stream"
+    random_port = random.randint(3000, 4000)  # Génère un port aléatoire pour le flux
+    stream_url = f"http://{client_ip}:{random_port}/stream/{phone_id}"  # Lien de streaming unique
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
     # Exécuter le serveur Flask
     local_ip = get_local_ip()
-    port = random.randint(10000, 65000)  # Choisir un port aléatoire entre 10000 et 65000
-    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
-    app.run(host="0.0.0.0", port=port)  # Démarrer le serveur sur un port aléatoire
+    print(f"Serveur en cours d'exécution sur : http://{local_ip}:5000")
+    app.run(host="0.0.0.0", port=5000)  # Lancer le serveur Flask
