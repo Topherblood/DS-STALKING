@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Camera Stream</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('receive_data', function(data) {
+            document.getElementById("dataDisplay").innerText = data.data;
+        });
+    </script>
 </head>
 <body>
-    <h1>Welcome to DS-STALKING</h1>
-    <p>This is the home page.</p>
-    <p><a href="/camera">Go to Camera Access</a></p>
+    <h1>Camera Stream</h1>
+    <p id="dataDisplay">Waiting for real-time data...</p>
 </body>
 </html>
