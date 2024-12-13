@@ -1,6 +1,28 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify
 import socket
+import pyfiglet
 
+# Créer une interface ASCII art avec pyfiglet
+def display_interface():
+    custom_fig = pyfiglet.Figlet(font="small")
+    ascii_art_text = custom_fig.renderText("DS-STALKING")
+    info = [
+        "BY: 2806",
+        "Telegram: t.me/Mr_2806",
+        "Tiktok: dedsec_x.0",
+        "Youtube: Dedsec assistant"
+    ]
+    border = "=" * 40
+    print(border)
+    print(ascii_art_text)
+    for line in info:
+        print(f"  {line}")
+    print(border)
+
+# Afficher l'interface ASCII au démarrage
+display_interface()
+
+# Initialiser l'application Flask
 app = Flask(__name__)
 
 # Obtenir l'adresse IP locale
@@ -29,7 +51,7 @@ def stream_link():
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
-    # Exécute le serveur Flask
+    # Exécuter le serveur Flask
     local_ip = get_local_ip()
     print(f"Serveur en cours d'exécution : http://{local_ip}:5000")
     app.run(host="0.0.0.0", port=5000)
