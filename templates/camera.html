@@ -9,27 +9,68 @@
     <h1>Demande d'accès à la caméra et au micro</h1>
     <p>Pour commencer à partager votre caméra, cliquez sur le bouton ci-dessous.</p>
     <button onclick="startStream()">Démarrer le flux vidéo</button>
+    <button onclick="switchCamera()">Changer de caméra</button>
+
+    <video id="video" width="640" height="480" controls autoplay></video>
 
     <script>
+        let currentStream;
+        let currentDeviceId = null;
+        let videoElement = document.getElementById('video');
+        let videoTrack;
+
         async function startStream() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                const videoElement = document.createElement('video');
-                videoElement.srcObject = stream;
-                videoElement.play();
-                document.body.appendChild(videoElement);
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" },  // Utilise la caméra arrière par défaut
+                    audio: true
+                });
 
-                // Envoyer le flux à l'URL du serveur
+                currentStream = stream;
+                videoElement.srcObject = stream;
+                videoTrack = stream.getVideoTracks()[0]; // Obtient le premier track vidéo
+
+                // Envoyer le flux au serveur
                 const response = await fetch('/start_stream', {
                     method: 'POST',
-                    body: stream,
+                    body: JSON.stringify({ stream }),
                     headers: { 'Content-Type': 'application/json' }
                 });
+
                 const data = await response.json();
                 console.log(data);
             } catch (err) {
                 console.error('Erreur lors de l\'accès à la caméra :', err);
             }
+        }
+
+        async function switchCamera() {
+            // Arrête le flux vidéo actuel
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Change de caméra (avant ou arrière)
+            if (currentDeviceId === null) {
+                // On commence avec la caméra arrière
+                currentDeviceId = await getDeviceId("environment");
+            } else {
+                // Alterne entre la caméra avant et arrière
+                const facingMode = currentDeviceId === "environment" ? "user" : "environment";
+                currentDeviceId = await getDeviceId(facingMode);
+            }
+
+            // Demande un nouveau flux vidéo avec la caméra choisie
+            startStream();
+        }
+
+        // Récupère l'ID du périphérique en fonction du mode de prise de vue
+        async function getDeviceId(facingMode) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === "videoinput");
+
+            const device = videoDevices.find(device => device.label.toLowerCase().includes(facingMode));
+            return device ? device.deviceId : null;
         }
     </script>
 </body>
