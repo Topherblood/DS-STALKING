@@ -4,9 +4,10 @@ import pyfiglet
 import subprocess
 import threading
 import time
-import os
 import random
+import os
 import webbrowser
+from flask_socketio import SocketIO, emit
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -28,8 +29,9 @@ def display_interface():
 # Afficher l'interface ASCII au démarrage
 display_interface()
 
-# Initialiser l'application Flask
+# Initialiser l'application Flask et SocketIO
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Obtenir l'adresse IP locale
 def get_local_ip():
@@ -46,19 +48,6 @@ def get_local_ip():
 # Générer un port aléatoire
 def get_random_port():
     return random.randint(10000, 65535)
-
-# Générer une URL ngrok ou un lien localhost
-def get_ngrok_url():
-    # Cette fonction sera utilisée pour démarrer ngrok via subprocess (optionnel)
-    ngrok_process = subprocess.Popen(["./ngrok", "http", str(get_random_port())], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    time.sleep(5)  # Attendre que ngrok démarre
-    ngrok_url = ""
-    with ngrok_process.stdout:
-        for line in iter(ngrok_process.stdout.readline, b""):
-            if b"Forwarding" in line:
-                ngrok_url = line.decode().split(" ")[1]
-                break
-    return ngrok_url
 
 @app.route("/")
 def home():
@@ -77,6 +66,23 @@ def stream_link():
 @app.route("/view_stream")
 def view_stream():
     return render_template("view_stream.html")
+
+@app.route("/change_camera", methods=["POST"])
+def change_camera():
+    # Logique pour changer la caméra
+    # On peut utiliser une variable globale ou une méthode qui gère l'index de la caméra
+    camera = request.json.get('camera')  # caméra avant ou arrière
+    print(f"Changement de caméra : {camera}")
+
+    # Logique pour changer de caméra (ici vous devriez ajuster selon votre configuration)
+    # Cela pourrait être un changement dans le code qui démarre la capture vidéo
+    # Exemple :
+    # if camera == "front":
+    #     start_front_camera()
+    # elif camera == "back":
+    #     start_back_camera()
+
+    return jsonify({"status": "success", "message": "Camera switched"})
 
 def start_ffmpeg():
     # Utiliser ffmpeg pour afficher les informations du flux vidéo en temps réel dans le terminal
@@ -109,4 +115,4 @@ if __name__ == "__main__":
     # Ouvrir automatiquement le navigateur pour le flux vidéo
     open_browser()
 
-    app.run(host="0.0.0.0", port=port)  # Lancer le serveur Flask sur le port généré
+    socketio.run(app, host="0.0.0.0", port=port)  # Lancer le serveur Flask sur le port généré
