@@ -1,55 +1,37 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caméra et Microphone</title>
-    <style>
-        /* Exemple de style pour la vidéo */
-        video {
-            width: 100%;
-            max-width: 600px;
-            border: 1px solid #000;
-        }
-    </style>
+    <title>Contrôler la caméra</title>
 </head>
 <body>
-    <h1>Page de Caméra et Micro</h1>
+    <h1>Contrôler la caméra et le micro du téléphone</h1>
 
-    <!-- Élément pour afficher le flux vidéo -->
-    <video id="video" autoplay></video>
-
-    <!-- Élément pour afficher le statut ou le lien du flux -->
-    <p id="status">En attente de la caméra et du micro...</p>
+    <!-- Bouton pour obtenir le lien de contrôle de la caméra -->
+    <button id="get-control-link">Obtenir le lien pour contrôler la caméra</button>
 
     <script>
-        // Demande d'accès à la caméra et au micro
-        const videoElement = document.getElementById('video');
-        const statusElement = document.getElementById('status');
-
-        // Demande d'accès aux périphériques multimédia
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoElement.srcObject = stream;
-                statusElement.textContent = "Caméra et micro activés.";
-
-                // Envoi de la requête pour obtenir le lien de streaming
-                fetch('/stream_link', { method: 'GET' })  // Utilisation de GET pour obtenir le lien
-                    .then(response => response.json())
-                    .then(data => {
-                        // Affichage du lien du flux dans l'élément status
-                        statusElement.textContent = "Lien du flux généré : " + data.stream_url;
-                        console.log(data.stream_url);  // Vérifiez dans la console si le lien est bien généré
-                    })
-                    .catch(error => {
-                        statusElement.textContent = "Erreur lors de la récupération du lien du flux.";
-                        console.error(error);
-                    });
+        // Lorsque le bouton est cliqué, envoyer une requête POST pour obtenir le lien de contrôle de la caméra
+        document.getElementById('get-control-link').addEventListener('click', function() {
+            fetch("/control_camera", {
+                method: "POST", // Utilisation de POST
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    // Vous pouvez envoyer des données supplémentaires ici si nécessaire
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Affichez le lien de contrôle
+                alert("Le lien pour contrôler la caméra est : " + data.control_url);
             })
             .catch(error => {
-                statusElement.textContent = "Erreur : Impossible d'accéder à la caméra/micro.";
-                console.error(error);
+                console.error("Erreur lors de la requête:", error);
             });
+        });
     </script>
 </body>
 </html>
