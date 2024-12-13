@@ -3,35 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrôler la caméra</title>
+    <title>DS-STALKING - Camera</title>
 </head>
 <body>
-    <h1>Contrôler la caméra et le micro du téléphone</h1>
-
-    <!-- Bouton pour obtenir le lien de contrôle de la caméra -->
-    <button id="get-control-link">Obtenir le lien pour contrôler la caméra</button>
-
+    <h1>Access Camera and Microphone</h1>
+    
+    <!-- Element for video display -->
+    <video id="video" width="640" height="480" autoplay></video>
+    
     <script>
-        // Lorsque le bouton est cliqué, envoyer une requête POST pour obtenir le lien de contrôle de la caméra
-        document.getElementById('get-control-link').addEventListener('click', function() {
-            fetch("/control_camera", {
-                method: "POST", // Utilisation de POST
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    // Vous pouvez envoyer des données supplémentaires ici si nécessaire
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Affichez le lien de contrôle
-                alert("Le lien pour contrôler la caméra est : " + data.control_url);
-            })
-            .catch(error => {
-                console.error("Erreur lors de la requête:", error);
-            });
-        });
+        // Fonction pour demander l'accès à la caméra et au microphone
+        async function startCamera() {
+            try {
+                // Demande l'accès à la caméra et au microphone
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+                // Affiche le flux vidéo dans l'élément video
+                const videoElement = document.getElementById('video');
+                videoElement.srcObject = stream;
+            } catch (err) {
+                console.error("Erreur d'accès à la caméra et au micro:", err);
+                alert("L'accès à la caméra et au micro a échoué. Veuillez autoriser l'accès.");
+            }
+        }
+
+        // Appeler la fonction pour démarrer la caméra lorsque la page est chargée
+        window.onload = startCamera;
     </script>
 </body>
 </html>
