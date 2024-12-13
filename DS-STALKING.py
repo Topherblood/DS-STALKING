@@ -67,11 +67,12 @@ def victim_permission():
 def start_stream():
     # Ici on peut mettre un traitement pour commencer le flux vidéo et audio
     local_ip = get_local_ip()
-    port = get_random_port()
+    port = get_random_port()  # Le port change à chaque fois
     stream_url = f"http://{local_ip}:{port}/stream"
     return jsonify({"stream_url": stream_url})
 
 if __name__ == "__main__":
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:5000")
-    app.run(host="0.0.0.0", port=5000)
+    port = get_random_port()  # Génère un port aléatoire à chaque exécution
+    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
+    app.run(host="0.0.0.0", port=port)  # Utilise le port généré aléatoirement
