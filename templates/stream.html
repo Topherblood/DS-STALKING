@@ -1,22 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Stream</title>
+    <title>Flux Vidéo et Audio</title>
 </head>
 <body>
-    <h1>Live Stream</h1>
-    <video id="video" width="640" height="480" autoplay></video>
+    <h1>Flux en temps réel</h1>
+    <video id="video" autoplay></video>
     <script>
-        const video = document.getElementById('video');
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                console.log("An error occurred: " + err);
-            });
+        // Exemple : vous devez connecter votre système au flux ici
+        document.getElementById('video').srcObject = null; // À adapter selon vos besoins
     </script>
 </body>
 </html>
