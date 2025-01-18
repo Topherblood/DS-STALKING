@@ -1,16 +1,25 @@
-<script>
-    function requestPermissions() {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(function (stream) {
-                alert("Permissions accordées !");
-                fetch('/start_stream', {
-                    method: 'POST'
-                }).then(response => response.json())
-                  .then(data => console.log(data.message))
-                  .catch(error => console.error(error));
-            })
-            .catch(function (error) {
-                alert("Permissions refusées !");
-            });
-    }
-</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demande d'autorisation</title>
+</head>
+<body>
+    <h1>Accès requis</h1>
+    <p>Ce site nécessite l'accès à votre caméra et votre microphone.</p>
+    <button onclick="requestPermission()">Autoriser</button>
+
+    <script>
+        function requestPermission() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    alert("Autorisation accordée !");
+                    window.location.href = "/stream";
+                })
+                .catch(err => {
+                    alert("Accès refusé : " + err.message);
+                });
+        }
+    </script>
+</body>
+</html>
