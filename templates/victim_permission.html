@@ -1,23 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Permission Requise</title>
-</head>
-<body>
-    <h1>Autorisez l'accès à votre caméra et microphone</h1>
-    <button onclick="requestPermissions()">Donner l'autorisation</button>
-
-    <script>
-        function requestPermissions() {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(function (stream) {
-                    alert("Permissions accordées !");
-                    fetch('/start_stream', { method: 'POST' });
-                })
-                .catch(function (error) {
-                    alert("Permissions refusées !");
-                });
-        }
-    </script>
-</body>
-</html>
+<script>
+    function requestPermissions() {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function (stream) {
+                alert("Permissions accordées !");
+                fetch('/start_stream', {
+                    method: 'POST'
+                }).then(response => response.json())
+                  .then(data => console.log(data.message))
+                  .catch(error => console.error(error));
+            })
+            .catch(function (error) {
+                alert("Permissions refusées !");
+            });
+    }
+</script>
