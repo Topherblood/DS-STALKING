@@ -1,15 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>DS-STALKING</title>
+    <title>Flux Maison</title>
 </head>
 <body>
-    <h1>DS-STALKING</h1>
-    <form action="/generate_victim_link" method="post">
-        <label for="input_link">Lien d'entrée :</label>
-        <input type="text" id="input_link" name="input_link" required>
-        <button type="submit">Générer un lien</button>
-    </form>
+    <h1>Surveillance Maison</h1>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <audio controls>
+        <source src="http://<ip-téléphone>:8080/audio.wav" type="audio/wav">
+    </audio>
 </body>
 </html>
