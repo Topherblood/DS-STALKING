@@ -1,6 +1,6 @@
 import cv2
 import socket
-import pyaudio
+import sounddevice as sd
 import threading
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -28,13 +28,8 @@ class CameraStreamer(BoxLayout):
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        # Audio configuration
-        self.p = pyaudio.PyAudio()
-        self.audio_stream = self.p.open(format=pyaudio.paInt16,
-                                        channels=1,
-                                        rate=44100,
-                                        input=True,
-                                        frames_per_buffer=1024)
+        # Audio configuration avec sounddevice
+        self.audio_stream = sd.InputStream(samplerate=44100, channels=1, blocksize=1024)
 
         # Lancement des threads
         threading.Thread(target=self.start_rtsp_stream).start()
@@ -43,9 +38,8 @@ class CameraStreamer(BoxLayout):
         """Capture vidéo/audio et démarre un flux RTSP."""
         print("Démarrage du flux RTSP sur rtsp://{}:{}".format(self.server_ip, self.rtsp_port))
 
-        # Enregistrement RTSP avec FFmpeg
+        # Enregistrement RTSP avec FFmpeg (modifié pour ne pas inclure l'audio)
         input_video = ffmpeg_streaming.input(self.capture)
-        input_audio = ffmpeg_streaming.input(self.audio_stream)
 
         # Serveur RTSP avec HLS
         ffmpeg_streaming.output(input_video, 'rtsp://{}:{}'.format(self.server_ip, self.rtsp_port), format=Formats.hls())
